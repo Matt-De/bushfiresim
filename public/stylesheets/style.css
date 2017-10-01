@@ -9,10 +9,8 @@ a {
 
 canvas {
   background-color: white;
-  width: 65%;
+  width: 100%;
   height: 100%;
 }
 
-.col-xl-9 {
-    background-color: black;
-}
+.top-buffer { margin-top: 2.5%; }
