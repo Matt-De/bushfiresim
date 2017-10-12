@@ -14,3 +14,7 @@ canvas {
 }
 
 .top-buffer { margin-top: 2.5%; }
+
+#ex1Slider .slider-selection {
+	background: #BABABA;
+}

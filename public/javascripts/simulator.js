@@ -1,8 +1,49 @@
 /* constants */
 // colours (todo: add more colours)
 const GREEN = "#3EB606";
-const DRY_GRASS = "#DBBB0B";
-const BLACK = "#000000"
+const DRY_GRASS = "rgb(219, 187, 11)";
+const GRASS_MEDIUM = "rgb(210, 204 ,21)";
+const GRASS = "rgb(200, 220, 30)";
+
+const BLACK = "#000000";
+const RED = "rgb(255, 0, 0)";
+
+var drawOutline = false;
+
+// taken from:
+// https://graphicdesign.stackexchange.com/questions/83866/generating-a-series-of-colors-between-two-colors
+function interpolateColor(color1, color2, factor) {
+    if (arguments.length < 3) { 
+        factor = 0.5; 
+    }
+    var result = color1.slice();
+    for (var i = 0; i < 3; i++) {
+        result[i] = Math.round(result[i] + factor * (color2[i] - color1[i]));
+    }
+    return result;
+};
+
+function interpolateColors(color1, color2, steps) {
+    var stepFactor = 1 / (steps - 1),
+        interpolatedColorArray = [];
+
+    color1 = color1.match(/\d+/g).map(Number);
+    color2 = color2.match(/\d+/g).map(Number);
+
+    for(var i = 0; i < steps; i++) {
+        interpolatedColorArray.push(interpolateColor(color1, color2, stepFactor * i));
+    }
+
+    return interpolatedColorArray;
+}
+
+// taken from:
+// https://stackoverflow.com/questions/41310869/colors-from-rgb-values-in-javascript-array
+function rgb(values) {
+    return 'rgb(' + values.join(', ') + ')';
+}
+
+var transitionColours = interpolateColors(DRY_GRASS, RED, 6);
 
 /* global variables */
 var grid = [];   // stores the grid of cell objects
@@ -15,13 +56,32 @@ var neWind;
 var nwWind;
 var swWind;
 var seWind;
+var windSpeed = 20;
+var RH = 5;
+var temperature = 30;
+
+// grid clamping functions
+function c0(i) { if(i>=0) { return i; } else { return 0; } }
+function c59(i) { if(i<60) { return i; } else { return 59; } }
 
 /* cell objects used inside the grid */
-function Cell(combustibility, elevation, colour) {
+function Cell(combustibility, elevation, curing) {
+    this.curing = curing;
     this.combustibility = combustibility;
     this.elevation = elevation;
-    this.colour = colour;
+    if(this.curing >=50 && this.curing <65) {
+        this.colour = GRASS;
+    } else if(this.curing >=65 && this.curing <80) {
+        this.colour = GRASS_MEDIUM;
+    } else {
+        this.colour = DRY_GRASS;
+    }
     this.state = 0; // how burnt the cell is at time t
+    this.nextState = 0;
+    this.area = 1;    // cell area
+    this.rate = MK34_rate(MK34_GFDI(this.curing, temperature, RH, windSpeed)); // kmph
+    this.timeTillBurned = (this.area/this.rate)*60*60;  // in seconds
+    this.currentBurnTime = 0;
 }
 
 /* define grid model for simulation */
@@ -29,103 +89,177 @@ function buildGrid() {
     for(var i=0; i<60; i++) {
         grid.push([]);
         for(var j=0; j<60; j++) {
-            grid[i].push(new Cell(1, 0, GREEN));
+            grid[i].push(new Cell(1, 0, Math.floor(Math.random()*(100-50))+50)); // mostly dead grass
+            //console.log(grid[i][j].rate);
+            //console.log(grid[i][j].timeRemaining);
         }
     }
 }
 
-/* draws a square of specified colour (hex code) */
-function drawSquare(x, y, colour) {
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    ctx.fillStyle=colour;
-    ctx.fillRect(x, y, 5, 5);
-}
-
-function drawGrid() {
-    for(var i=0; i<60; i++) {
-        for(var j=0; j<60; j++) {
-            drawSquare(j*5, i*5, grid[i][j].colour);
+function updateCell(i, j) {
+    if(grid[i][j].state > 0) {  // already alight, just update burn time
+        grid[i][j].currentBurnTime += 10;
+        grid[i][j].nextState = grid[i][j].currentBurnTime / grid[i][j].timeTillBurned;
+        if(grid[i][j].state >= 0.20 && grid[i][j].state < 0.40) {
+            grid[i][j].colour = rgb(transitionColours[1]);
+        } else if(grid[i][j].state >= 0.40 && grid[i][j].state < 0.60) {
+            grid[i][j].colour = rgb(transitionColours[2]);
+        } else if(grid[i][j].state >= 0.60 && grid[i][j].state < 0.80) {
+            grid[i][j].colour = rgb(transitionColours[3]);
+        } else if(grid[i][j].state >= 0.80 && grid[i][j].state < 1) {
+            grid[i][j].colour = rgb(transitionColours[4]);
+        } else if(grid[i][j].state >= 1) {
+            grid[i][j].colour = RED;
+        } else {
+            // error has occurred 
+        }
+        //console.log("POS " + i + " " + j + " STATE: " + grid[i][j].state + "\n");
+    } else {
+        // are any of my neighbours on fire? if so how burnt are they
+        // if any immediate neighbour is above 75% i'll catch fire
+        // diagonal neighbours need to be 92%
+        if((eWind*grid[i][c59(j+1)].state > 0.75) || (wWind*grid[i][c0(j-1)].state > 0.75) 
+           || (nWind*grid[c59(i+1)][j].state > 0.75) || (sWind*grid[c0(i-1)][j].state > 0.75)) {
+            grid[i][j].nextState = 0.01; // help, i am on fire
+        } else if((neWind*grid[c59(i+1)][c59(j+1)].state > 0.92) || (swWind*grid[c0(i-1)][c0(j-1)].state > 0.92) 
+           || (nwWind*grid[c59(i+1)][c0(j-1)].state > 0.92) || (seWind*grid[c0(i-1)][c59(j+1)].state > 0.92)) {
+            grid[i][j].nextState = 0.01; // help, i am on fire
         }
     }
-    drawGridOutline();
 }
-
-/* draws an outline of a square grid */
-function drawGridOutline() {
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    for (var x = 0.5; x <= 300.5; x += 5) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 300.5);
-    } 
-    for (var y = 0.5; y <= 300.5; y += 5) {
-      ctx.moveTo(0, y);
-      ctx.lineTo(300.5, y);
-    }
-    ctx.stroke();
-}
-
-
-/* ################################## */
-/* ###  FIRE RATE ALGORITHMS HERE ### */
-/* ################################## */
-
-/* continuous grass land */
-
-// McArthur Grassland Fire Danger Index Mk3/4
-// todo: add detailed comment
-function MK34_GFDI(C,T,RH,U) {
-    return (2*Math.exp((-23.6)+(5.1*Math.log(C))-(0.0281*T)+(0.663*Math.sqrt(U))));
-}
-
-// McArthur headfire rate of spread
-// todo: add detailed comment
-function MK34_rate(GFDI) { return (0.13*GFDI); }
-
-// Mcarthur Grassland Fire Danger Index Mk5
-// takes into account fuel load
-function MK5_GFDI(w,C,T,RH,U) {
-    // compute moisture content (MC)
-    var MC = (((97.7+(4.06*RH))/(T+6))-(0.00854*RH)+(3000/C)-30);
-    // compute GFDI depending on MC
-    if(MC<18.8) {
-        return ((3.35*w)*(exp((-0.0897*MC))+(0.0403*U)));
-    } else if(MC>=18.8) {
-        return ((0.299*w)*(exp((-1.686*MC))+(0.0403*U))*(30-MC));
-    } else {
-        // error has occurred
-    }
-}
-
-// McArthur headfire rate of spread Mk5
-// Takes into account fuel load
-function MK5_rate(GFDI, w) {
-    if((w>=4)&&(w<=6)) {
-        // MK5 uses 0.14 to account for differences in observed values from different meters
-        return (0.14*GFDI); 
-    } else if((w>=0)&&(w<4)) {
-        return (0.06*GFDI);
-    } else {
-        // error has occurred
-    }
-}
-
-// Cheney et al. rate of spread for undisturbed grass
-// todo
 
 /* updates the simulation */
 function updateGrid() {
     for(var i=0; i<60; i++) {
         for(var j=0; j<60; j++) {
-            grid[i][j].
+            updateCell(i,j);
+        }
+    }
+    for(var i=0; i<60; i++) {
+        for(var j=0; j<60; j++) {
+            grid[i][j].state = grid[i][j].nextState;
+        }
+    }
+    if(drawOutline) {
+        drawGrid(drawOutline);
+    } else {
+        drawGrid();
+    }
+    window.setTimeout(updateGrid, 100);
+}
+
+function updateRate() {
+    for(var i=0; i<60; i++) {
+        for(var j=0; j<60; j++) {
+            grid[i][j].rate = MK34_rate(MK34_GFDI(grid[i][j].curing, temperature, RH, windSpeed));
+            grid[i][j].timeTillBurned = (grid[i][j].area/grid[i][j].rate)*60*60;
+            //console.log(grid[i][j].rate);
         }
     }
 }
-    
-/* running code from here */
+
+var running = false;
 
 // build and fill grid
 buildGrid();
 drawGrid();
-window.setTimeout(updateGrid, 1000);
+
+// returns the coordinates of the mouse on the grid
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: Math.floor(((evt.clientX - rect.left)/3)/5),
+      y: Math.floor(((evt.clientY - rect.top)/3)/5)
+    };
+}
+
+var canvas = document.getElementById('canvas');
+canvas.addEventListener('click', function(evt) {
+        var mousePos = getMousePos(canvas, evt);
+        if(!running) {
+            if(mousePos.x>0 && mousePos.x<=60 && mousePos.y>0 && mousePos.y<=60) {
+                console.log(mousePos.x);
+                console.log(mousePos.y);
+                grid[mousePos.y][mousePos.x].state = 0.01;
+                window.setTimeout(updateGrid, 100);
+                running = true;
+                // disable slider inputs
+                $("#humiditySlider").slider("disable");
+                $("#tempSlider").slider("disable");
+                $("#windSpeedSlider").slider("disable");
+            }
+        }
+}, false);
+    
+/* running code from here */
+// initialise some values
+neWind = 1;
+nWind = 1;
+nwWind = 1;
+seWind = 1;
+sWind = 1;
+swWind = 1;
+eWind = 1;
+wWind = 1;
+
+
+
+
+
+$("#northSouthWindSlider").slider({
+	formatter: function(value) {
+        if(value==0) {
+            nWind = 1;
+            sWind = 1;
+        } else if(value<0) {
+            nWind = 1+(Math.abs(value));
+            sWind = 1-(Math.abs(value)); 
+        } else {
+            nWind = 1-(Math.abs(value));
+            sWind = 1+(Math.abs(value));
+        }
+	}
+});
+$("#westEastWindSlider").slider({
+	formatter: function(value) {
+        if(value==0) {
+            wWind = 1;
+            eWind = 1;
+        } else if(value<0) {
+            wWind = 1+(Math.abs(value));
+            eWind = 1-(Math.abs(value));
+        } else {
+            wWind = 1-(Math.abs(value));
+            eWind = 1+(Math.abs(value));
+        }
+	}
+});
+$("#windSpeedSlider").slider({
+	formatter: function(value) {
+        windSpeed = value;
+        updateRate();
+	}
+});
+
+$("#humiditySlider").slider({
+	formatter: function(value) {
+        RH = value;
+        updateRate();
+	}
+});
+$("#tempSlider").slider({
+	formatter: function(value) {
+        temperature = value;
+        updateRate();
+	}
+});
+
+$("#showGridCheck").click(function() {
+    if ($("#showGridCheck").is(":checked")) {
+        drawOutline = true;
+        drawGrid(drawOutline);
+    } else {
+        drawOutline = false;
+        drawGrid();
+    }
+});

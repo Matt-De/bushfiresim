@@ -9,4 +9,36 @@ block content
             .col-xl-8.text-left
                 canvas(id="canvas", width="305.5", height="305.5")
             .col-xl-4.text-left
-                p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque velit quam, volutpat sed enim quis, scelerisque imperdiet enim. Vivamus id ligula ipsum. Sed eget nibh viverra, laoreet libero in, luctus lorem. Mauris at purus eget enim auctor aliquam sit amet eget magna. Nam et eros nec enim ornare blandit ut et sapien. Duis sollicitudin magna justo, non molestie ante blandit vel. Sed luctus enim sit amet libero dignissim bibendum. Pellentesque non tincidunt purus, in congue lacus. Ut iaculis, quam eu consectetur sagittis, velit tortor tempus lectus, vitae sodales ante nibh ac elit. Phasellus ut dignissim est. Donec egestas sit amet felis sit amet tristique. Vestibulum justo est, dignissim at feugiat sed, mollis ut ligula. Fusce lorem erat, imperdiet eu maximus ut, pulvinar id tellus.
+                // parameters
+                .row    
+                    .col-md-12
+                        label
+                            b Temperature:
+                    .col-md-12
+                        input(id="tempSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="50", data-slider-step="1", data-slider-value="30")
+                    .col-md-12
+                        label
+                            b Relative Humidity:
+                    .col-md-12
+                        input(id="humiditySlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="100", data-slider-step="5", data-slider-value="5")
+                    .col-md-12
+                        label 
+                            b Wind Direction:
+                    .col-md-12
+                        label North - South
+                    .col-md-12
+                        input(id="northSouthWindSlider", data-slider-id='ex1Slider', type="text", data-slider-min="-1.0", data-slider-max="1.0", data-slider-step="0.10", data-slider-value="0.0")
+                    .col-md-12
+                        label West - East
+                    .col-md-12
+                        input(id="westEastWindSlider", data-slider-id='ex1Slider', type="text", data-slider-min="-1.0", data-slider-max="1.0", data-slider-step="0.10", data-slider-value="0.0")
+                    .col-md-12
+                        label 
+                            b Wind Speed:
+                    .col-md-12
+                        input(id="windSpeedSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="80", data-slider-step="2", data-slider-value="20")      
+                    .col-md-12
+                        label 
+                            b Show grid:
+                        input(id="showGridCheck", type="checkbox", aria-label="Show grid")
+                
