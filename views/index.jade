@@ -6,39 +6,53 @@ block content
             .col-md-12
                 h1 #{title}
         .row.top-buffer
-            .col-xl-8.text-left
-                canvas(id="canvas", width="305.5", height="305.5")
+            .col-xl-8
+                h4 Terrain Grid
+                .grid
+                    canvas(id="canvas", width="305.5", height="305.5")
             .col-xl-4.text-left
                 // parameters
-                .row    
-                    .col-md-12
-                        label
-                            b Temperature:
-                    .col-md-12
-                        input(id="tempSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="50", data-slider-step="1", data-slider-value="30")
-                    .col-md-12
-                        label
-                            b Relative Humidity:
-                    .col-md-12
-                        input(id="humiditySlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="100", data-slider-step="5", data-slider-value="5")
-                    .col-md-12
-                        label 
-                            b Wind Direction:
-                    .col-md-12
-                        label North - South
-                    .col-md-12
-                        input(id="northSouthWindSlider", data-slider-id='ex1Slider', type="text", data-slider-min="-1.0", data-slider-max="1.0", data-slider-step="0.10", data-slider-value="0.0")
-                    .col-md-12
-                        label West - East
-                    .col-md-12
-                        input(id="westEastWindSlider", data-slider-id='ex1Slider', type="text", data-slider-min="-1.0", data-slider-max="1.0", data-slider-step="0.10", data-slider-value="0.0")
-                    .col-md-12
-                        label 
-                            b Wind Speed:
-                    .col-md-12
-                        input(id="windSpeedSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="80", data-slider-step="2", data-slider-value="20")      
-                    .col-md-12
-                        label 
-                            b Show grid:
-                        input(id="showGridCheck", type="checkbox", aria-label="Show grid")
-                
+                h4 Simulation Controls
+                .controls
+                    .row
+                        .col-md-12
+                            label
+                                b Temperature:
+                            label(id="tempLabel")
+                        .col-md-12
+                            input(id="tempSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="50", data-slider-step="1", data-slider-value="30")
+                        .col-md-12
+                            label
+                                b Relative Humidity:
+                            label(id="humiditiLabel")
+                        .col-md-12
+                            input(id="humiditySlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="100", data-slider-step="5", data-slider-value="5")
+                        .col-md-12
+                            label
+                                b Wind Direction: 
+                            label(id="windDirecionLabel")
+                        .col-md-12
+                            label North - South
+                        .col-md-12
+                            input(id="northSouthWindSlider", data-slider-id='ex1Slider', type="text", data-slider-min="-1.0", data-slider-max="1.0", data-slider-step="0.10", data-slider-value="0.0")
+                        .col-md-12
+                            label West - East
+                        .col-md-12
+                            input(id="westEastWindSlider", data-slider-id='ex1Slider', type="text", data-slider-min="-1.0", data-slider-max="1.0", data-slider-step="0.10", data-slider-value="0.0")
+                        .col-md-12
+                            label
+                                b Wind Speed:
+                            label(id="windSpeedLabel")
+                        .col-md-12
+                            input(id="windSpeedSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="80", data-slider-step="2", data-slider-value="20")
+                        .col-md-12
+                            label
+                                b Simulation Speed:
+                            label(id="simulationSpeed")
+                        .col-md-12
+                            input(id="simulationSpeedSlider", data-slider-id='ex1Slider', type="text", data-slider-min="0", data-slider-max="100", data-slider-step="5", data-slider-value="10")
+                        .col-md-12
+                            label 
+                                b Show grid:
+                            input(id="showGridCheck", type="checkbox", aria-label="Show grid")
+

@@ -5,10 +5,11 @@ const DRY_GRASS = "rgb(219, 187, 11)";
 const GRASS_MEDIUM = "rgb(210, 204 ,21)";
 const GRASS = "rgb(200, 220, 30)";
 
-const BLACK = "#000000";
+const BLACK_GREY = "#484242";
 const RED = "rgb(255, 0, 0)";
 
 var drawOutline = false;
+var speed = 10; // number of simulation seconds per second
 
 // taken from:
 // https://graphicdesign.stackexchange.com/questions/83866/generating-a-series-of-colors-between-two-colors
@@ -66,7 +67,7 @@ function c59(i) { if(i<60) { return i; } else { return 59; } }
 
 /* cell objects used inside the grid */
 function Cell(combustibility, elevation, curing) {
-    this.curing = curing;
+    this.curing = 100;
     this.combustibility = combustibility;
     this.elevation = elevation;
     if(this.curing >=50 && this.curing <65) {
@@ -98,20 +99,20 @@ function buildGrid() {
 
 function updateCell(i, j) {
     if(grid[i][j].state > 0) {  // already alight, just update burn time
-        grid[i][j].currentBurnTime += 10;
+        grid[i][j].currentBurnTime += speed;
         grid[i][j].nextState = grid[i][j].currentBurnTime / grid[i][j].timeTillBurned;
-        if(grid[i][j].state >= 0.20 && grid[i][j].state < 0.40) {
+        if(grid[i][j].state >= 0.0 && grid[i][j].state < 0.20) {
             grid[i][j].colour = rgb(transitionColours[1]);
-        } else if(grid[i][j].state >= 0.40 && grid[i][j].state < 0.60) {
+        } else if(grid[i][j].state >= 0.20 && grid[i][j].state < 0.40) {
             grid[i][j].colour = rgb(transitionColours[2]);
-        } else if(grid[i][j].state >= 0.60 && grid[i][j].state < 0.80) {
+        } else if(grid[i][j].state >= 0.40 && grid[i][j].state < 0.60) {
             grid[i][j].colour = rgb(transitionColours[3]);
-        } else if(grid[i][j].state >= 0.80 && grid[i][j].state < 1) {
+        } else if(grid[i][j].state >= 0.60 && grid[i][j].state < 0.80) {
             grid[i][j].colour = rgb(transitionColours[4]);
-        } else if(grid[i][j].state >= 1) {
+        } else if(grid[i][j].state >= 0.80 && grid[i][j].state.state < 1) {
             grid[i][j].colour = RED;
-        } else {
-            // error has occurred 
+        } else if(grid[i][j].state >= 1){
+            grid[i][j].colour = BLACK_GREY;
         }
         //console.log("POS " + i + " " + j + " STATE: " + grid[i][j].state + "\n");
     } else {
@@ -202,21 +203,40 @@ swWind = 1;
 eWind = 1;
 wWind = 1;
 
+function updateWindDir() {
+    $("#windDirecionLabel").text("North: " + nWind + "%, South: " + sWind + "%, East: " + eWind + "%, West: " + wWind + "%");
+}
 
+function updateHumidity() {
+    $("#humiditiLabel").text(RH + "%");
+}
 
+function updateWindSpeed() {
+    $("#windSpeedLabel").text(windSpeed + "KM/H");
+}
 
+function updateTemperature() {
+    $("#tempLabel").text(temperature + "°C");
+}
+
+function updateSpeed() {
+    $("#simulationSpeed").text((10*speed) + " simulation seconds per second");
+}
 
 $("#northSouthWindSlider").slider({
 	formatter: function(value) {
         if(value==0) {
             nWind = 1;
             sWind = 1;
+            updateWindDir();
         } else if(value<0) {
-            nWind = 1+(Math.abs(value));
-            sWind = 1-(Math.abs(value)); 
+            nWind = Math.floor(1+(Math.abs(value))*100);
+            sWind = Math.floor(1-(Math.abs(value))*100); 
+            updateWindDir();
         } else {
-            nWind = 1-(Math.abs(value));
-            sWind = 1+(Math.abs(value));
+            nWind = Math.floor(1-(Math.abs(value))*100);
+            sWind = Math.floor(1+(Math.abs(value))*100);
+            updateWindDir();
         }
 	}
 });
@@ -225,12 +245,15 @@ $("#westEastWindSlider").slider({
         if(value==0) {
             wWind = 1;
             eWind = 1;
+            updateWindDir();
         } else if(value<0) {
-            wWind = 1+(Math.abs(value));
-            eWind = 1-(Math.abs(value));
+            wWind = Math.floor(1+(Math.abs(value))*100);
+            eWind = Math.floor(1-(Math.abs(value))*100);
+            updateWindDir();
         } else {
-            wWind = 1-(Math.abs(value));
-            eWind = 1+(Math.abs(value));
+            wWind = Math.floor(1-(Math.abs(value))*100);
+            eWind = Math.floor(1+(Math.abs(value))*100);
+            updateWindDir();
         }
 	}
 });
@@ -238,6 +261,7 @@ $("#windSpeedSlider").slider({
 	formatter: function(value) {
         windSpeed = value;
         updateRate();
+        updateWindSpeed();
 	}
 });
 
@@ -245,12 +269,20 @@ $("#humiditySlider").slider({
 	formatter: function(value) {
         RH = value;
         updateRate();
+        updateHumidity();
 	}
 });
 $("#tempSlider").slider({
 	formatter: function(value) {
         temperature = value;
         updateRate();
+        updateTemperature();
+	}
+});
+$("#simulationSpeedSlider").slider({
+	formatter: function(value) {
+        speed = value;
+        updateSpeed();
 	}
 });
 

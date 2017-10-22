@@ -21,11 +21,9 @@ function MK5_GFDI(w,C,T,RH,U) {
     var MC = (((97.7+(4.06*RH))/(T+6))-(0.00854*RH)+(3000/C)-30);
     // compute GFDI depending on MC
     if(MC<18.8) {
-        return ((3.35*w)*(exp((-0.0897*MC))+(0.0403*U)));
-    } else if(MC>=18.8) {
-        return ((0.299*w)*(exp((-1.686*MC))+(0.0403*U))*(30-MC));
+        return ((3.35*w)*(Math.exp((-0.0897*MC))+(0.0403*U)));
     } else {
-        // error has occurred
+        return ((0.299*w)*(Math.exp((-1.686*MC))+(0.0403*U))*(30-MC));
     }
 }
 
@@ -40,4 +38,44 @@ function MK5_rate(GFDI, w) {
     } else {
         // error has occurred
     }
+}
+
+// CSIRO Grassland fire spread model
+// for undisturbed grass
+function CSIRO_rate_undisturbed(U, phiM, phiC) {
+    if(U<5) {
+        return (0.054 + 0269*U)*phiM*phiC;
+    } else {
+        return (1.4 + 0.838*((U-5)^0.844))*phiM*phiC
+    }
+}
+
+// for cut grass
+function CSIRO_rate_cut(U, phiM, phiC) {
+    if(U<5) {
+        return (0.054 + 0209*U)*phiM*phiC;
+    } else {
+        return (1.1 + 0.715*(U-5)^0.844)*phiM*phiC
+    }
+}
+
+// computes phiM using the wind speed and moisture content
+function CSIRO_phiM(MC, U) {
+    if(MC<12) {
+        return Math.exp(-0.108*MC);
+    } else if((MC>12) && (U<=10)) {
+        return (0.684 - 0.0342*MC);
+    } else {
+        return (0.547 - 0.0228*MC);
+    }
+}
+
+// computes the moisture content using temperature and humidity
+function CSIRO_MC(T, RH) {
+    return (9.58 - 0.205*T + 0.138*RH);
+}
+
+// computes phiC using the curing level
+function CSIRO_phiC(C) {
+    return ((1.12)/(1+59.2*Math.exp(-0.124*(C-50))));
 }

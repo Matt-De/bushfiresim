@@ -1,0 +1,152 @@
+doctype html
+html(lang="en")
+  head
+    title= title
+    meta(charset="utf-8")
+  body
+    h1 FIRE SPREAD MODEL TEST PAGE
+    p This page exists purely for testing the fire spread functions used in the web based bush fire simulator. Inputs are not checked or validated.
+    label
+        b McArthur grass fire danger index v4
+    br
+    label Grass Curing: 
+    input(id="mk4C",type="text")
+    br
+    label Temperature: 
+    input(id="mk4T",type="text")
+    br
+    label Relative Humidity: 
+    input(id="mk4RH",type="text")
+    br
+    label Wind Speed: 
+    input(id="mk4U",type="text")
+    br
+    button(onclick="mkgfdi4()") calculate GFDI
+    label(id="mkgfdi4_result")
+    br
+    
+    label
+        b McArthur Rate of Spread
+    br
+    label GFDI: 
+    input(id="mk4GFDI",type="text")
+    br
+    button(onclick="mkgfdi4R()") calculate rate
+    label(id="mkgfdi4R_result")
+    br
+    
+    label
+        b McArthur grass fire danger index v5
+    br
+    label Fuel Load: 
+    input(id="mk5w",type="text")
+    br
+    label Grass Curing: 
+    input(id="mk5C",type="text")
+    br
+    label Temperature: 
+    input(id="mk5T",type="text")
+    br
+    label Relative Humidity: 
+    input(id="mk5RH",type="text")
+    br
+    label Wind Speed: 
+    input(id="mk5U",type="text")
+    br
+    button(onclick="mkgfdi5()") calculate GFDI
+    label(id="mkgfdi5_result")
+    br
+    
+    label
+        b CSIRO Grassland fire spread model for undisturbed grass
+    br
+    label Grass Curing: 
+    input(id="csiroUC",type="text")
+    br
+    label Temperature: 
+    input(id="csiroUT",type="text")
+    br
+    label Relative Humidity: 
+    input(id="csiroURH",type="text")
+    br
+    label Wind Speed: 
+    input(id="csiroUU",type="text")
+    br
+    button(onclick="csiroU()") calculate rate of spread
+    label(id="csiroU_result")
+    br
+    
+    label
+        b CSIRO Grassland fire spread model for cut grass
+    br
+    label Grass Curing: 
+    input(id="csiroCC",type="text")
+    br
+    label Temperature: 
+    input(id="csiroCT",type="text")
+    br
+    label Relative Humidity: 
+    input(id="csiroCRH",type="text")
+    br
+    label Wind Speed: 
+    input(id="csiroCU",type="text")
+    br
+    button(onclick="csiroC()") calculate rate of spread
+    label(id="csiroC_result")
+    br
+    
+    script(src="javascripts/fireModels.js", type="text/javascript")
+    
+    script.
+        function mkgfdi4() {
+            var C = document.getElementById("mk4C").value;
+            var T = document.getElementById("mk4T").value;
+            var RH = document.getElementById("mk4RH").value;
+            var U = document.getElementById("mk4U").value;
+            var GFDI = MK34_GFDI(C,T,RH,U);
+            document.getElementById("mkgfdi4_result").innerHTML = GFDI;
+        }
+        
+        function mkgfdi4R() {
+            var GFDI = document.getElementById("mk4GFDI").value;
+            var R = MK34_rate(GFDI);
+            document.getElementById("mkgfdi4R_result").innerHTML = R;
+        }
+        
+        function mkgfdi5() {
+            var w = document.getElementById("mk5w").value;
+            var C = document.getElementById("mk5C").value;
+            var T = document.getElementById("mk5T").value;
+            var RH = document.getElementById("mk5RH").value;
+            var U = document.getElementById("mk5U").value;
+            var GFDI = MK5_GFDI(w,C,T,RH,U);
+            document.getElementById("mkgfdi5_result").innerHTML = GFDI;
+        }
+        
+        function csiroU() {
+            var C = document.getElementById("csiroUC").value;
+            var T = document.getElementById("csiroUT").value;
+            var RH = document.getElementById("csiroURH").value;
+            var U = document.getElementById("csiroUU").value;
+            var MC = CSIRO_MC(T, RH);
+            var phiM = CSIRO_phiM(MC, U);
+            var phiC = CSIRO_phiC(C);
+            var rate = CSIRO_rate_undisturbed(U, phiM, phiC);
+            document.getElementById("csiroU_result").innerHTML = rate;
+        }
+        
+        function csiroC() {
+            var C = document.getElementById("csiroCC").value;
+            var T = document.getElementById("csiroCT").value;
+            var RH = document.getElementById("csiroCRH").value;
+            var U = document.getElementById("csiroCU").value;
+            var MC = CSIRO_MC(T, RH);
+            var phiM = CSIRO_phiM(MC, U);
+            var phiC = CSIRO_phiC(C);
+            var rate = CSIRO_rate_cut(U, phiM, phiC);
+            document.getElementById("csiroC_result").innerHTML = rate;
+        }
+        
+        
+    
+    
